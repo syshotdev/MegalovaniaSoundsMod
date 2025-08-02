@@ -1,0 +1,12 @@
+{
+	"required": true,
+	"package": "com.syshotdev.mixin.client",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+    "AbstractSoundInstanceMixin",
+    "SoundManagerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
