@@ -11,10 +11,19 @@ import com.syshotdev.MegalovaniaSoundsClient;
 
 @Mixin(AbstractSoundInstance.class)
 public class AbstractSoundInstanceMixin {
-	@Inject(method = "getPitch", at = @At("HEAD"), cancellable = true)
+
+  // Goodness this is terrifying
+  // We check if the source equals the source the main class says we should care about,
+  // then we change it if it is.
+	@Inject(method = "getPitch()F", at = @At("HEAD"), cancellable = true)
 	private void returnPitch(CallbackInfoReturnable<Float> cir) {
-    float pitch = MegalovaniaSoundsClient.self.getNextNotePitch();
-    System.out.println("Pitch: " + pitch);
-    cir.setReturnValue(pitch);
+    AbstractSoundInstance soundInstance = (AbstractSoundInstance) (Object) this;
+    if (soundInstance.getSource() == MegalovaniaSoundsClient.self.currentCategory) {
+      float pitch = MegalovaniaSoundsClient.self.getNextNotePitch();
+      System.out.println("Category: " + soundInstance.getSource().toString() + ", Pitch: " + pitch);
+      cir.setReturnValue(pitch);
+    } else {
+      cir.setReturnValue(1.0f);
+    }
 	}
 }

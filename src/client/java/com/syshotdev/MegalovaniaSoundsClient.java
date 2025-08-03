@@ -2,35 +2,61 @@ package com.syshotdev;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.minecraft.sounds.SoundSource;
 
 public class MegalovaniaSoundsClient implements ClientModInitializer {
 	@Override
-	public void onInitializeClient() {
-		// This entrypoint is suitable for setting up client-specific logic, such as rendering.
-	}
+	public void onInitializeClient() { }
+
   public static MegalovaniaSoundsClient self = new MegalovaniaSoundsClient();
 
-  // String: note name, Float: note pitch (based on real life, you should scale from 0 to 1)
-  private static final HashMap<String, Float> noteMap = generateNoteHashmap();
-  
+  // ---------- CATEGORY SWITCHING AND RESETTING ----------
+
+  public SoundSource currentCategory = SoundSource.BLOCKS;
+  private long lastSoundMs = System.currentTimeMillis();
+  private static final long resetCategoryMsAmount = 2000; // How long of silence to switch category
+
+  // This is to check if we need to switch the current sound category.
+  // If you're placing blocks, keep on megalovanianing until you've stopped,
+  // and reset the beat and category once you start again
+  public boolean timeToResetCategory(SoundSource soundCategory) {
+    long msSinceLastSound = System.currentTimeMillis() - lastSoundMs;
+    if (soundCategory == currentCategory) {
+      lastSoundMs = System.currentTimeMillis();
+    }
+    if (msSinceLastSound > resetCategoryMsAmount) {
+      return true;
+    }
+    return false;
+  }
+
+  // Sets the sound category and resets beat
+  public void resetCategory(SoundSource soundCategory) {
+    lastSoundMs = System.currentTimeMillis();
+    currentCategory = soundCategory;
+    resetMegalovaniaBeat();
+  }
+
+  // Resets the beat so you can recognize the song after starting after a while
+  private void resetMegalovaniaBeat() {
+    currentNote = 0;
+  }
+
+  // ---------- NOTES ----------
+
   private static final String megalovaniaNotesString = """
     D4 D4 D5 A4 G#4 G4 F4 D4 F4 G4 C4 C4 D5 A4 G#4 G4 F4 D4 F4 G4 B4 B4 D5 A4 G#4 
     G4 F4 D4 F4 G4 A#4 A#4 D5 A4 G#4 G4 F4 D4 F4 G4 F4 F4 F4 F4 D4 D4 D4 F4 F4 F4 G4 G#4 G4 F4 D4 F4 G4 F4 F4 F4 G4 G#4 A4 
     C4 A4 D4 D4 D4 A4 D4 C4 A4 A4 A4 A4 G4 G4 G4 A4 A4 A4 A4 G4 A4 C4 A4 G4 D4 A4 G4 F4 C4 G4 F4 E4 D4 D4 D4 D4 F4 C4 F4 D4 F4 G4 G#4 G4 F4""";
-  /*
-  private static final String megalovaniaNotesString = """
-    F4 F4 F4 F4 F4 F6 F6 F6 F6 F6
-    """;
-    */
   private static final List<String> megalovaniaNotesArray = List.of(megalovaniaNotesString.strip().split("\\s+")); // Get from splitting notes string
 
-
+  // String: note name, Float: note pitch (based on real life, you should scale based on octaves)
+  private static final HashMap<String, Float> noteMap = generateNoteHashmap();
+  
   private int currentNote = 0;
-  private static int megalovaniaNotesSize = megalovaniaNotesArray.size();
+  private static final int megalovaniaNotesSize = megalovaniaNotesArray.size();
   private String nextNote() {
     if(currentNote >= megalovaniaNotesSize - 1) {
       currentNote = 0;
@@ -40,24 +66,13 @@ public class MegalovaniaSoundsClient implements ClientModInitializer {
     return note;
   }
 
-  private static final float maxNoteValue = megalovaniaNotesArray.stream()
-                 .map(noteMap::get)
-                 .filter(Objects::nonNull)
-                 .max(Float::compareTo)
-                 .orElseThrow(() -> new NoSuchElementException("No matching keys found in map"));
-  private static final float minNoteValue = megalovaniaNotesArray.stream()
-                 .map(noteMap::get)
-                 .filter(Objects::nonNull)
-                 .min(Float::compareTo)
-                 .orElseThrow(() -> new NoSuchElementException("No matching keys found in map"));
-
   public float getNextNotePitch() {
     String noteString = nextNote();
     float frequency = noteMap.get(noteString);
     // Get semitone instead of frequency
+    // I do not understand this math either
     float semitone = Math.round(12 * Math.log(frequency / 440.0) / Math.log(2));
-    // We scale noteValue based on minNoteValue to maxNoteValue, to get a range from 0.1 to 1
-    double pitch = Math.pow(2, (semitone/12)); //0.5 + ((noteValue - minNoteValue) / (maxNoteValue - minNoteValue)) * (1.5 - 0.5);
+    double pitch = Math.pow(2, (semitone/12));
     return (float)pitch;
   }
 

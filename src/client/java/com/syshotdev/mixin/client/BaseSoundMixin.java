@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
 
+// NOT WORKING!!!
 // A mixin to change the `sound` instance constructor entirely.
 @Mixin(Sound.class)
 public class BaseSoundMixin {
