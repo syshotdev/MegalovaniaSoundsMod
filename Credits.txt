@@ -1,0 +1,4 @@
+Tsoding - His megalovania repository (https://github.com/tsoding/megalovania)
+FalsePattern - His minecraft flake (https://github.com/FalsePattern/mcdev-flake)
+Mclegoman - His minecraft mixin sound repository, helped me wrap my head around the subject (https://github.com/mclegoman/replace_all_sounds)
+FabricMC docs - Super helpful, especially mixins
